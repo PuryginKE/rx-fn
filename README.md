@@ -8,7 +8,7 @@ Install the package in your project with rxjs
 
 Import class RxFn
 
-    import RxFn from '../rx-fn/rx-fn';
+    import { RxFn } from 'rx-fn';
 
 Create RxFn object from function with return type observable
 
