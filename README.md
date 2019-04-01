@@ -1,5 +1,6 @@
 # RxFn
 The wrapper object for RxJS observables help you to reduce similar constructions of store and automate the control of loading and error states.
+
 ![rxfn](https://user-images.githubusercontent.com/20255399/55286351-5c9bcd80-53a3-11e9-9d71-a3cb451b6b92.png)
 ## Getting Started
 Install the package in your project with rxjs
