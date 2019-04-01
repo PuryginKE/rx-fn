@@ -8,6 +8,7 @@ function rxFn<T, Args extends Array<any>>(fn: (...args: Args) => Observable<T>):
 
   let _countSubscribers = 0;
   let _countSubscribersStore = 0;
+  let _params: Args;
 
   const _store$ = new BehaviorSubject(null);
   const _firstLoadingSubscriber = this.isLoading$.subscribe((bool: boolean) => {
@@ -16,6 +17,20 @@ function rxFn<T, Args extends Array<any>>(fn: (...args: Args) => Observable<T>):
       _firstLoadingSubscriber.unsubscribe();
       this.firstLoaing$.complete();
     }
+  });
+  const _request = new Observable<T>((subscriber) => {
+    this.isLoading$.next(true);
+    const subscription = fn(..._params).subscribe(subscriber);
+    _countSubscribers++;
+    return () => {
+      this.isLoading$.next(false);
+      subscription.unsubscribe();
+      _countSubscribers--;
+      if (_countSubscribers === 0) {
+        this.isLoading$.next(null);
+        this.firstLoaing$.next(null);
+      }
+    };
   });
 
   this.getValue = (): T => _store$.getValue();
@@ -42,33 +57,19 @@ function rxFn<T, Args extends Array<any>>(fn: (...args: Args) => Observable<T>):
     };
   });
 
-  this.setParams = (...params: Args): void => {
-    const request = new Observable<T>((subscriber) => {
-      debugger
-      this.isLoading$.next(true);
-      const subscription = fn(...params).subscribe(subscriber);
-      _countSubscribers++;
-      return () => {
-        this.isLoading$.next(false);
-        subscription.unsubscribe();
-        _countSubscribers--;
-        if (_countSubscribers === 0) {
-          this.isLoading$.next(null);
-          this.firstLoaing$.next(null);
-        }
-      };
-    });
+  this.get$ = _request.pipe(
+    catchError((e) => {
+      this.isLoading$.next(e);
+      this.errorHandler$.next(e);
+      return throwError(e);
+    }),
+    finalize(() => {
+      this.isLoading$.next(false);
+    })
+  );
 
-    this.get$ = request.pipe(
-      catchError((e) => {
-        this.isLoading$.next(e);
-        this.errorHandler$.next(e);
-        return throwError(e);
-      }),
-      finalize(() => {
-        this.isLoading$.next(false);
-      })
-    );
+  this.setParams = (...params: Args): void => {
+    _params = params;
   };
 
   if (!(this instanceof rxFn)) {
@@ -76,15 +77,15 @@ function rxFn<T, Args extends Array<any>>(fn: (...args: Args) => Observable<T>):
   }
 
   return Object.assign(func.bind(this), this);
-};
+}
 
 interface RequestObjectConstructor {
-  <T>(fn: () => Observable<T>): RxFnModel<T, null>;
-  <T, Arg>(fn: (arg: Arg) => Observable<T>): RxFnModel<T, [Arg]>;
+  <T>(fn: () => Observable<T>): RxFnModel<T, any[]>;
   <T, Args extends Array<any>>(fn: (...args: Args) => Observable<T>): RxFnModel<T, Args>;
-  new <T>(fn: () => Observable<T>): RxFnModel<T, null>;
-  new <T, Arg>(fn: (arg: Arg) => Observable<T>): RxFnModel<T, [Arg]>;
+  <T, Arg extends any>(fn: (arg: Arg) => Observable<T>): RxFnModel<T, [Arg]>;
+  new <T>(fn: () => Observable<T>): RxFnModel<T, any[]>;
   new <T, Args extends Array<any>>(fn: (...args: Args) => Observable<T>): RxFnModel<T, Args>;
+  new <T, Arg extends any>(fn: (arg: Arg) => Observable<T>): RxFnModel<T, [Arg]>;
   readonly prototype: RxFnModel<any, any>;
 }
 

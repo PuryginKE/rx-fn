@@ -1,5 +1,5 @@
 # RxFn
-The wrap object for RxJS observables help you to reduce similar constructions of store and don't think to control loading state. For handling errors the wrap consist error subject channel that also control loading state. With the aim of understanding best review using RxJS store with RxFn
+The wrapper object for RxJS observables help you to reduce similar constructions of store and automate the control of loading and error states.
 ![rxfn](https://user-images.githubusercontent.com/20255399/55286351-5c9bcd80-53a3-11e9-9d71-a3cb451b6b92.png)
 ## Getting Started
 Install the package in your project with rxjs
@@ -41,7 +41,7 @@ Let's look at the last function in the getting interface. When we call it as:
 
 	this.getData('history', 13);
 
-The function is a wrapper function for `_getData` that is called with entered params.  Then RxFn observe request, switch loading state to `true` and wait complete request, next depending on the result to switch loading, error and etc. channels.
+The function is a wrapper function for `_getData` that is called with entered params. Then RxFn observe request, switch loading state to `true` and wait complete request, next depending on the result to switch loading, error and etc. channels.
 
 P.S. `get$` and `setParams` needed for if your case don't required creating store and you want get loading and error state of request
 

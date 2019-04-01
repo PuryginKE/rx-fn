@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "RxJs store wrapper",
   "main": "lib/index.js",
-  "types" : "lib/index.d.ts",
+  "types": "lib/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc --sourceMap false"
@@ -19,7 +19,10 @@
     "observe",
     "rx-fn",
     "store",
-    "loading"
+    "state",
+    "loading",
+    "behaviorsubject",
+    "automate"
   ],
   "author": "Dmitry Tishkin <dmitrytishkin@icloud.com>",
   "license": "ISC",
