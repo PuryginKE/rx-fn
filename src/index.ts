@@ -1,10 +1,10 @@
-import { catchError, filter, finalize } from 'rxjs/operators';
+import { catchError, filter, finalize, tap } from 'rxjs/operators';
 import { Observable, BehaviorSubject, throwError, Subject } from 'rxjs';
 
-function rxFn<T, Args extends Array<any>>(fn: (...args: Args) => Observable<T>): RxFnModel<T, Args> {
+function rxFn<T, Args extends Array<any>>(fn: (...args: Args) => Observable<T>): RxFn<T, Args> {
   this.isLoading$ = new BehaviorSubject(null);
   this.errorHandler$ = new Subject();
-  this.firstLoaing$ = new BehaviorSubject(null);
+  this.firstLoading$ = new BehaviorSubject(null);
 
   let _countSubscribers = 0;
   let _countSubscribersStore = 0;
@@ -12,10 +12,10 @@ function rxFn<T, Args extends Array<any>>(fn: (...args: Args) => Observable<T>):
 
   const _store$ = new BehaviorSubject(null);
   const _firstLoadingSubscriber = this.isLoading$.subscribe((bool: boolean) => {
-    this.firstLoaing$.next(bool);
+    this.firstLoading$.next(bool);
     if (bool === false) {
       _firstLoadingSubscriber.unsubscribe();
-      this.firstLoaing$.complete();
+      this.firstLoading$.complete();
     }
   });
   const _request = new Observable<T>((subscriber) => {
@@ -28,7 +28,7 @@ function rxFn<T, Args extends Array<any>>(fn: (...args: Args) => Observable<T>):
       _countSubscribers--;
       if (_countSubscribers === 0) {
         this.isLoading$.next(null);
-        this.firstLoaing$.next(null);
+        this.firstLoading$.next(null);
       }
     };
   });
@@ -38,9 +38,7 @@ function rxFn<T, Args extends Array<any>>(fn: (...args: Args) => Observable<T>):
 
   function func(...params: Args): BehaviorSubject<T> {
     this.setParams(...params);
-    this.get$.subscribe((data: T) => {
-      _store$.next(data);
-    });
+    this.get$.subscribe();
 
     return this.store$;
   };
@@ -65,6 +63,11 @@ function rxFn<T, Args extends Array<any>>(fn: (...args: Args) => Observable<T>):
     }),
     finalize(() => {
       this.isLoading$.next(false);
+    }),
+    tap((data) => {
+      if (_countSubscribersStore) {
+        _store$.next(data);
+      }
     })
   );
 
@@ -80,18 +83,18 @@ function rxFn<T, Args extends Array<any>>(fn: (...args: Args) => Observable<T>):
 }
 
 interface RequestObjectConstructor {
-  <T>(fn: () => Observable<T>): RxFnModel<T, any[]>;
-  <T, Args extends Array<any>>(fn: (...args: Args) => Observable<T>): RxFnModel<T, Args>;
-  <T, Arg extends any>(fn: (arg: Arg) => Observable<T>): RxFnModel<T, [Arg]>;
-  new <T>(fn: () => Observable<T>): RxFnModel<T, any[]>;
-  new <T, Args extends Array<any>>(fn: (...args: Args) => Observable<T>): RxFnModel<T, Args>;
-  new <T, Arg extends any>(fn: (arg: Arg) => Observable<T>): RxFnModel<T, [Arg]>;
-  readonly prototype: RxFnModel<any, any>;
+  <T>(fn: () => Observable<T>): RxFn<T, any[]>;
+  <T, Args extends Array<any>>(fn: (...args: Args) => Observable<T>): RxFn<T, Args>;
+  <T, Arg extends any>(fn: (arg: Arg) => Observable<T>): RxFn<T, [Arg]>;
+  new <T>(fn: () => Observable<T>): RxFn<T, any[]>;
+  new <T, Args extends Array<any>>(fn: (...args: Args) => Observable<T>): RxFn<T, Args>;
+  new <T, Arg extends any>(fn: (arg: Arg) => Observable<T>): RxFn<T, [Arg]>;
+  readonly prototype: RxFn<any, any>;
 }
 
-interface RxFnModel<T, P extends Array<any>> {
+export interface RxFn<T, P extends Array<any>> {
   isLoading$: BehaviorSubject<any>;
-  firstLoaing$: BehaviorSubject<any>;
+  firstLoading$: BehaviorSubject<any>;
   errorHandler$: Subject<any>;
   store$: Observable<T>;
   get$: Observable<T>;
