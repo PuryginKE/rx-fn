@@ -5,11 +5,11 @@ The wrapper object for RxJS observables help you to reduce similar constructions
 ## Getting Started
 Install the package in your project with rxjs
 
-    npm install rx-fn --save
+    npm install rxfn --save
 
 Import class RxFn
 
-    import { RxFn } from 'rx-fn';
+    import { RxFn } from 'rxfn';
 
 Create RxFn object from function with return type observable
 
