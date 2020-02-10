@@ -1,4 +1,4 @@
-import { catchError, filter, finalize, tap } from 'rxjs/operators';
+import { catchError, filter, finalize, tap, takeUntil } from 'rxjs/operators';
 import { Observable, BehaviorSubject, throwError, Subject } from 'rxjs';
 
 function rxFn<T, Args extends Array<any>>(fn: (...args: Args) => Observable<T>): RxFn<T, Args> {
@@ -11,6 +11,7 @@ function rxFn<T, Args extends Array<any>>(fn: (...args: Args) => Observable<T>):
   let _params: Args;
 
   const _store$ = new BehaviorSubject(null);
+  const _destroy$ = new Subject();
   const _firstLoadingSubscriber = this.isLoading$.subscribe((bool: boolean) => {
     this.firstLoading$.next(bool);
     if (bool === false) {
@@ -20,7 +21,7 @@ function rxFn<T, Args extends Array<any>>(fn: (...args: Args) => Observable<T>):
   });
   const _request = new Observable<T>((subscriber) => {
     this.isLoading$.next(true);
-    const subscription = fn(..._params).subscribe(subscriber);
+    const subscription = fn(..._params).pipe(takeUntil(_destroy$)).subscribe(subscriber);
     _countSubscribers++;
     return () => {
       this.isLoading$.next(false);
@@ -51,6 +52,8 @@ function rxFn<T, Args extends Array<any>>(fn: (...args: Args) => Observable<T>):
       _countSubscribersStore--;
       if (_countSubscribersStore === 0) {
         _store$.next(null);
+        _destroy$.next();
+        _destroy$.complete();
       }
     };
   });
